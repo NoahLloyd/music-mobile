@@ -17,7 +17,7 @@ export default function PlaylistScreen() {
   const getPlaylistTracks = useLibraryStore((s) => s.getPlaylistTracks)
   const removeTrackFromPlaylist = useLibraryStore((s) => s.removeTrackFromPlaylist)
   const renamePlaylist = useLibraryStore((s) => s.renamePlaylist)
-  const setQueue = usePlayerStore((s) => s.setQueue)
+  const playPlaylist = usePlayerStore((s) => s.playPlaylist)
 
   const [tracks, setTracks] = useState<Track[]>([])
   const [editing, setEditing] = useState(false)
@@ -38,7 +38,7 @@ export default function PlaylistScreen() {
   }
 
   const handlePlay = (index: number) => {
-    setQueue(tracks, index)
+    playPlaylist(tracks, index)
   }
 
   const handleRemove = async (trackId: string) => {

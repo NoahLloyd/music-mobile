@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { View, Platform } from 'react-native'
-import { Stack } from 'expo-router'
+import { Stack, useRouter, usePathname } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { setupPlayer, registerPlayback } from '@/lib/trackPlayer'
 import { useLibraryStore } from '@/stores/libraryStore'

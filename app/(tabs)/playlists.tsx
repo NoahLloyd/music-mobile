@@ -4,11 +4,14 @@ import { Ionicons } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useLibraryStore } from '@/stores/libraryStore'
+import { usePlayerStore } from '@/stores/playerStore'
 
 export default function PlaylistsScreen() {
   const playlists = useLibraryStore((s) => s.playlists)
   const createPlaylist = useLibraryStore((s) => s.createPlaylist)
   const deletePlaylist = useLibraryStore((s) => s.deletePlaylist)
+  const getPlaylistTracks = useLibraryStore((s) => s.getPlaylistTracks)
+  const playPlaylist = usePlayerStore((s) => s.playPlaylist)
   const router = useRouter()
 
   const [isCreating, setIsCreating] = useState(false)
@@ -31,6 +34,13 @@ export default function PlaylistsScreen() {
         onPress: () => deletePlaylist(id),
       },
     ])
+  }
+
+  const handlePlayPlaylist = async (id: string) => {
+    const tracks = await getPlaylistTracks(id)
+    if (tracks.length > 0) {
+      playPlaylist(tracks)
+    }
   }
 
   return (
@@ -78,15 +88,22 @@ export default function PlaylistsScreen() {
             onLongPress={() => handleDelete(item.id, item.name)}
             className="flex-row items-center px-5 py-4 active:bg-surface-2"
           >
-            <View className="w-12 h-12 rounded-xl bg-surface-2 items-center justify-center mr-4">
-              <Ionicons name="musical-notes" size={20} color="rgba(255,255,255,0.2)" />
+            <View className="w-14 h-14 rounded-xl bg-surface-2 items-center justify-center mr-4">
+              <Ionicons name="musical-notes" size={22} color="rgba(255,255,255,0.2)" />
             </View>
             <View className="flex-1">
               <Text className="text-white text-base font-medium" numberOfLines={1}>
                 {item.name}
               </Text>
-              <Text className="text-white/30 text-xs mt-0.5">Playlist</Text>
+              <Text className="text-white/30 text-sm mt-0.5">Playlist</Text>
             </View>
+            <Pressable
+              onPress={() => handlePlayPlaylist(item.id)}
+              className="w-10 h-10 rounded-full bg-accent items-center justify-center ml-2"
+              hitSlop={8}
+            >
+              <Ionicons name="play" size={18} color="black" style={{ marginLeft: 2 }} />
+            </Pressable>
           </Pressable>
         )}
         ListEmptyComponent={

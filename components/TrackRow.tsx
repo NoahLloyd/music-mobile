@@ -69,8 +69,8 @@ export default function TrackRow({ track, index, onPlay, onLongPress, onMenuPres
     <View className="overflow-hidden">
       {/* Swipe background */}
       <View className="absolute inset-0 flex-row items-center pl-5 bg-accent/15">
-        <Ionicons name="add-circle-outline" size={20} color="#22c55e" />
-        <Text className="text-accent text-xs ml-2 font-medium">Queue</Text>
+        <Ionicons name="add-circle-outline" size={22} color="#22c55e" />
+        <Text className="text-accent text-sm ml-2 font-medium">Queue</Text>
       </View>
 
       <Animated.View
@@ -80,50 +80,47 @@ export default function TrackRow({ track, index, onPlay, onLongPress, onMenuPres
         <Pressable
           onPress={onPlay}
           onLongPress={onLongPress}
-          className={`flex-row items-center gap-3 px-4 py-3 bg-surface-0 ${
+          className={`flex-row items-center gap-3.5 px-4 py-3.5 bg-surface-0 ${
             isCurrent ? 'bg-surface-2' : 'active:bg-surface-2'
           }`}
         >
-          {/* Index / playing indicator */}
-          <Pressable onPress={openMenu} className="w-8 items-center justify-center">
-            {isCurrent && isPlaying ? (
-              <Ionicons name="musical-note" size={14} color="rgba(255,255,255,0.4)" />
-            ) : (
-              <Text className="text-white/30 text-sm">{index + 1}</Text>
-            )}
-          </Pressable>
-
           {/* Artwork */}
           {track.artwork_url ? (
             <Image
               source={{ uri: track.artwork_url }}
-              className="w-11 h-11 rounded-lg"
+              className="w-14 h-14 rounded-xl"
             />
           ) : (
-            <View className="w-11 h-11 rounded-lg bg-surface-3 items-center justify-center">
-              <Ionicons name="musical-note" size={18} color="rgba(255,255,255,0.15)" />
+            <View className="w-14 h-14 rounded-xl bg-surface-3 items-center justify-center">
+              <Ionicons name="musical-note" size={22} color="rgba(255,255,255,0.15)" />
             </View>
           )}
 
           {/* Track info */}
           <View className="flex-1 min-w-0">
             <Text
-              className={`text-sm ${isCurrent ? 'text-accent' : 'text-white'}`}
+              className={`text-base ${isCurrent ? 'text-accent font-semibold' : 'text-white'}`}
               numberOfLines={1}
             >
               {track.title}
             </Text>
-            <Text className="text-xs text-white/40" numberOfLines={1}>
+            <Text className="text-sm text-white/40 mt-0.5" numberOfLines={1}>
               {track.artist || 'Unknown'}
             </Text>
           </View>
 
-          {/* Duration - tappable to open menu */}
-          <Pressable onPress={openMenu} className="pl-2 pr-1 py-2">
-            <Text className="text-xs text-white/30">
-              {formatDuration(track.duration, track.start_time, track.end_time)}
-            </Text>
-          </Pressable>
+          {/* Now playing indicator or duration */}
+          {isCurrent && isPlaying ? (
+            <View className="pl-2 pr-1 py-2">
+              <Ionicons name="volume-medium" size={18} color="#22c55e" />
+            </View>
+          ) : (
+            <Pressable onPress={openMenu} className="pl-2 pr-1 py-2">
+              <Text className="text-sm text-white/30">
+                {formatDuration(track.duration, track.start_time, track.end_time)}
+              </Text>
+            </Pressable>
+          )}
         </Pressable>
       </Animated.View>
     </View>

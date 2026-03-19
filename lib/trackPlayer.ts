@@ -4,6 +4,7 @@ import TrackPlayer, {
   Event,
   RepeatMode,
 } from 'react-native-track-player'
+import { usePlayerStore } from '@/stores/playerStore'
 
 export function registerPlayback() {
   try {
@@ -47,11 +48,25 @@ export async function setupPlayer(): Promise<boolean> {
 }
 
 async function playbackService() {
-  TrackPlayer.addEventListener(Event.RemotePause, () => TrackPlayer.pause())
-  TrackPlayer.addEventListener(Event.RemotePlay, () => TrackPlayer.play())
-  TrackPlayer.addEventListener(Event.RemoteNext, () => TrackPlayer.skipToNext())
-  TrackPlayer.addEventListener(Event.RemotePrevious, () => TrackPlayer.skipToPrevious())
+  TrackPlayer.addEventListener(Event.RemotePause, () => {
+    usePlayerStore.getState().pause()
+  })
+  TrackPlayer.addEventListener(Event.RemotePlay, () => {
+    usePlayerStore.getState().resume()
+  })
+  TrackPlayer.addEventListener(Event.RemoteNext, () => {
+    usePlayerStore.getState().next()
+  })
+  TrackPlayer.addEventListener(Event.RemotePrevious, () => {
+    usePlayerStore.getState().previous()
+  })
   TrackPlayer.addEventListener(Event.RemoteSeek, (event) => {
     TrackPlayer.seekTo(event.position)
+  })
+  // Auto-advance when a track finishes
+  TrackPlayer.addEventListener(Event.PlaybackQueueEnded, (event) => {
+    if (event.track !== undefined) {
+      usePlayerStore.getState().next()
+    }
   })
 }

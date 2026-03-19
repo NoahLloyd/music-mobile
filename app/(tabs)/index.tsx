@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { View, Text, TextInput, FlatList, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLibraryStore } from '@/stores/libraryStore'
@@ -14,11 +14,17 @@ export default function LibraryScreen() {
   const setSearchQuery = useLibraryStore((s) => s.setSearchQuery)
   const fetchTracks = useLibraryStore((s) => s.fetchTracks)
   const lastError = useLibraryStore((s) => s.lastError)
-  const setQueue = usePlayerStore((s) => s.setQueue)
+  const playPlaylist = usePlayerStore((s) => s.playPlaylist)
+  const setAllTracks = usePlayerStore((s) => s.setAllTracks)
 
   const [refreshing, setRefreshing] = useState(false)
   const [menuTrack, setMenuTrack] = useState<Track | null>(null)
   const [editTrack, setEditTrack] = useState<Track | null>(null)
+
+  // Keep the player store's allTracks in sync with the library
+  useEffect(() => {
+    setAllTracks(tracks)
+  }, [tracks])
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return tracks
@@ -37,7 +43,7 @@ export default function LibraryScreen() {
   }, [])
 
   const handlePlay = (index: number) => {
-    setQueue(filtered, index)
+    playPlaylist(filtered, index)
   }
 
   return (
@@ -56,10 +62,6 @@ export default function LibraryScreen() {
       {lastError && (
         <View style={{ margin: 16, padding: 12, backgroundColor: 'rgba(239,68,68,0.15)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' }}>
           <Text style={{ color: '#f87171', fontSize: 12, fontFamily: 'monospace' }}>{lastError}</Text>
-          <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, marginTop: 6, fontFamily: 'monospace' }}>
-            URL: {process.env.EXPO_PUBLIC_SUPABASE_URL ? '✓ set' : '✗ missing'}{'\n'}
-            KEY: {process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? '✓ set' : '✗ missing'}
-          </Text>
         </View>
       )}
 
@@ -86,13 +88,8 @@ export default function LibraryScreen() {
           <View className="items-center mt-20 px-6">
             <Text className="text-white/30 text-lg mb-2">No tracks yet</Text>
             <Text className="text-white/20 text-sm text-center">
-              Download some music from the Add tab to get started
+              Import some music from the Add tab to get started
             </Text>
-            {!lastError && (
-              <Text style={{ color: 'rgba(255,255,255,0.15)', fontSize: 10, marginTop: 16, fontFamily: 'monospace', textAlign: 'center' }}>
-                ENV: URL={process.env.EXPO_PUBLIC_SUPABASE_URL ? 'set' : 'MISSING'} KEY={process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'set' : 'MISSING'}
-              </Text>
-            )}
           </View>
         }
         contentContainerStyle={{ paddingBottom: 120 }}
