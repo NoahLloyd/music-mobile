@@ -3,6 +3,7 @@ import { Track, Playlist, PlaylistTrack } from '@/shared/types'
 import { supabase, getAudioUrl } from '@/lib/supabase'
 import { File } from 'expo-file-system'
 import * as DocumentPicker from 'expo-document-picker'
+import { cacheTrackFromBytes } from '@/lib/cache'
 
 interface LibraryState {
   tracks: Track[]
@@ -263,6 +264,8 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
             .single()
 
           if (dbError) throw dbError
+          // Cache locally so it's available offline immediately
+          cacheTrackFromBytes(track.id, bytes)
           imported.push(track)
         } catch (err: any) {
           console.error(`Failed to import ${asset.name}:`, err)

@@ -43,6 +43,30 @@ export async function cacheTrack(trackId: string, storagePath: string): Promise<
   })
 }
 
+export function cacheTrackFromBytes(trackId: string, bytes: Uint8Array): string {
+  const dir = getCacheDir()
+  if (!dir.exists) {
+    dir.create()
+  }
+  const cached = getCachedFile(trackId)
+  if (cached.exists) return cached.uri
+
+  // Convert Uint8Array to base64
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  const base64 = btoa(binary)
+
+  cached.create()
+  cached.write(base64, { encoding: 'base64' })
+  return cached.uri
+}
+
 export function isCached(trackId: string): boolean {
   return getCachedFile(trackId).exists
+}
+
+export function uncachedCount(trackIds: string[]): number {
+  return trackIds.filter((id) => !getCachedFile(id).exists).length
 }

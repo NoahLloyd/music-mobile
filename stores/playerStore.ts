@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import TrackPlayer from 'react-native-track-player'
 import { Track } from '@/shared/types'
-import { getCachedOrRemoteUrl } from '@/lib/cache'
+import { getCachedOrRemoteUrl, cacheTrack } from '@/lib/cache'
 
 interface PlayerState {
   currentTrack: Track | null
@@ -53,6 +53,8 @@ async function loadTrackToPlayer(track: Track): Promise<void> {
     if (track.start_time) {
       await TrackPlayer.seekTo(track.start_time)
     }
+    // Cache in background for offline playback
+    cacheTrack(track.id, track.storage_path).catch(() => {})
   } catch (e) {
     console.warn('Failed to load track:', e)
   }
