@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { Track, Playlist, PlaylistTrack } from '@/shared/types'
 import { supabase, getAudioUrl } from '@/lib/supabase'
-import { File } from 'expo-file-system'
 import * as DocumentPicker from 'expo-document-picker'
 import { cacheTrackFromBytes } from '@/lib/cache'
 
@@ -89,6 +88,14 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     set((state) => ({
       tracks: state.tracks.map((t) => (t.id === id ? { ...t, ...updates } : t)),
     }))
+    // Keep the player store's currentTrack in sync if it's the one being edited
+    const { usePlayerStore } = require('@/stores/playerStore')
+    const playerState = usePlayerStore.getState()
+    if (playerState.currentTrack?.id === id) {
+      usePlayerStore.setState({
+        currentTrack: { ...playerState.currentTrack, ...updates },
+      })
+    }
   },
 
   deleteTrack: async (id) => {
@@ -216,10 +223,6 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
         try {
           const title = asset.name?.replace(/\.[^/.]+$/, '') || 'Unknown'
           const ext = asset.name?.match(/\.[^/.]+$/)?.[0] || '.mp3'
-
-          // Read file and upload to Supabase Storage
-          const file = new File(asset.uri)
-          const fileContent = file.text()
 
           const fileName = `${Date.now()}-${title.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 50)}${ext}`
           const storagePath = `tracks/${fileName}`

@@ -1,8 +1,8 @@
 import { View, Text, Image, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { usePlayerStore } from '@/stores/playerStore'
-import { useEffect } from 'react'
-import TrackPlayer, { useProgress, usePlaybackState, State, Event } from 'react-native-track-player'
+import { useEffect, useRef } from 'react'
+import { useProgress, usePlaybackState, State } from 'react-native-track-player'
 
 export default function PlayerBar() {
   const currentTrack = usePlayerStore((s) => s.currentTrack)
@@ -15,12 +15,18 @@ export default function PlayerBar() {
 
   const progress = useProgress(250)
   const playbackState = usePlaybackState()
+  const lastAdvancedTrackId = useRef<string | null>(null)
 
   useEffect(() => {
     setProgress(progress.position)
     setDuration(progress.duration)
 
-    if (currentTrack?.end_time && progress.position >= currentTrack.end_time) {
+    if (
+      currentTrack?.end_time &&
+      progress.position >= currentTrack.end_time &&
+      lastAdvancedTrackId.current !== currentTrack.id
+    ) {
+      lastAdvancedTrackId.current = currentTrack.id
       next()
     }
   }, [progress.position])
@@ -31,13 +37,6 @@ export default function PlayerBar() {
       usePlayerStore.setState({ isPlaying: playing })
     }
   }, [playbackState.state])
-
-  useEffect(() => {
-    const sub = TrackPlayer.addEventListener(Event.PlaybackQueueEnded, () => {
-      next()
-    })
-    return () => sub.remove()
-  }, [])
 
   if (!currentTrack) return null
 
