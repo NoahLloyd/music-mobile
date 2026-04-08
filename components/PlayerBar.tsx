@@ -21,7 +21,9 @@ export default function PlayerBar() {
     setProgress(progress.position)
     setDuration(progress.duration)
 
+    // Only auto-advance on end_time for unprocessed tracks
     if (
+      !currentTrack?.processed_storage_path &&
       currentTrack?.end_time &&
       progress.position >= currentTrack.end_time &&
       lastAdvancedTrackId.current !== currentTrack.id
@@ -40,8 +42,9 @@ export default function PlayerBar() {
 
   if (!currentTrack) return null
 
-  const effectiveDuration = currentTrack.end_time || progress.duration || 1
-  const effectiveStart = currentTrack.start_time || 0
+  const isProcessed = !!currentTrack.processed_storage_path
+  const effectiveDuration = isProcessed ? (progress.duration || 1) : (currentTrack.end_time || progress.duration || 1)
+  const effectiveStart = isProcessed ? 0 : (currentTrack.start_time || 0)
   const progressPct =
     ((progress.position - effectiveStart) / (effectiveDuration - effectiveStart)) * 100
 

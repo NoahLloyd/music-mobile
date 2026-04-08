@@ -29,8 +29,9 @@ export default function PlayerSheet({ visible, onClose }: PlayerSheetProps) {
 
   if (!currentTrack) return null
 
-  const effectiveDuration = currentTrack.end_time || progress.duration
-  const effectiveStart = currentTrack.start_time || 0
+  const isProcessed = !!currentTrack.processed_storage_path
+  const effectiveDuration = isProcessed ? progress.duration : (currentTrack.end_time || progress.duration)
+  const effectiveStart = isProcessed ? 0 : (currentTrack.start_time || 0)
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
