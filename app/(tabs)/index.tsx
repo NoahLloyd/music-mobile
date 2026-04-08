@@ -28,7 +28,7 @@ export default function LibraryScreen() {
   // Check how many tracks need downloading
   useEffect(() => {
     if (tracks.length > 0) {
-      setUncached(uncachedCount(tracks.map((t) => t.id)))
+      setUncached(uncachedCount(tracks))
     } else {
       setUncached(0)
     }
@@ -38,7 +38,7 @@ export default function LibraryScreen() {
     setDownloading(true)
     for (const track of tracks) {
       try {
-        await cacheTrack(track.id, track.storage_path)
+        await cacheTrack(track.id, track.storage_path, track.processed_storage_path)
         setUncached((prev) => Math.max(0, prev - 1))
       } catch {}
     }
@@ -71,7 +71,7 @@ export default function LibraryScreen() {
   const currentTrack = usePlayerStore((s) => s.currentTrack)
   useEffect(() => {
     if (tracks.length > 0) {
-      setUncached(uncachedCount(tracks.map((t) => t.id)))
+      setUncached(uncachedCount(tracks))
     }
   }, [currentTrack])
 

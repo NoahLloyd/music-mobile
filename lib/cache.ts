@@ -11,7 +11,23 @@ function getCachedFile(trackId: string): File {
   return new File(getCacheDir(), `${trackId}.mp3`)
 }
 
-export async function getCachedOrRemoteUrl(trackId: string, storagePath: string): Promise<string> {
+function getProcessedCachedFile(trackId: string): File {
+  return new File(getCacheDir(), `${trackId}.processed.m4a`)
+}
+
+export async function getCachedOrRemoteUrl(
+  trackId: string,
+  storagePath: string,
+  processedStoragePath?: string | null,
+): Promise<string> {
+  // Prefer processed file if available
+  if (processedStoragePath) {
+    const processedCached = getProcessedCachedFile(trackId)
+    if (processedCached.exists) {
+      return processedCached.uri
+    }
+    return getAudioUrl(processedStoragePath)
+  }
   const cached = getCachedFile(trackId)
   if (cached.exists) {
     return cached.uri
@@ -19,14 +35,29 @@ export async function getCachedOrRemoteUrl(trackId: string, storagePath: string)
   return getAudioUrl(storagePath)
 }
 
-export async function cacheTrack(trackId: string, storagePath: string): Promise<string> {
+export async function cacheTrack(
+  trackId: string,
+  storagePath: string,
+  processedStoragePath?: string | null,
+): Promise<string> {
   const dir = getCacheDir()
   if (!dir.exists) {
     dir.create()
   }
+
+  // If processed file exists, cache that instead of the original
+  if (processedStoragePath) {
+    const processedCached = getProcessedCachedFile(trackId)
+    if (processedCached.exists) return processedCached.uri
+    return downloadToFile(processedStoragePath, processedCached)
+  }
+
   const cached = getCachedFile(trackId)
   if (cached.exists) return cached.uri
+  return downloadToFile(storagePath, cached)
+}
 
+async function downloadToFile(storagePath: string, file: File): Promise<string> {
   const remoteUrl = await getAudioUrl(storagePath)
   const response = await fetch(remoteUrl)
   const blob = await response.blob()
@@ -35,9 +66,9 @@ export async function cacheTrack(trackId: string, storagePath: string): Promise<
   return new Promise<string>((resolve, reject) => {
     reader.onload = () => {
       const base64 = (reader.result as string).split(',')[1]
-      cached.create()
-      cached.write(base64, { encoding: 'base64' })
-      resolve(cached.uri)
+      file.create()
+      file.write(base64, { encoding: 'base64' })
+      resolve(file.uri)
     }
     reader.onerror = () => {
       reject(reader.error ?? new Error('FileReader failed'))
@@ -66,10 +97,18 @@ export function cacheTrackFromBytes(trackId: string, bytes: Uint8Array): string 
   return cached.uri
 }
 
-export function isCached(trackId: string): boolean {
+export function isCached(trackId: string, hasProcessed?: boolean): boolean {
+  if (hasProcessed) {
+    return getProcessedCachedFile(trackId).exists
+  }
   return getCachedFile(trackId).exists
 }
 
-export function uncachedCount(trackIds: string[]): number {
-  return trackIds.filter((id) => !getCachedFile(id).exists).length
+export function uncachedCount(tracks: { id: string; processed_storage_path?: string | null }[]): number {
+  return tracks.filter((t) => {
+    if (t.processed_storage_path) {
+      return !getProcessedCachedFile(t.id).exists
+    }
+    return !getCachedFile(t.id).exists
+  }).length
 }

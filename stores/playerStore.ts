@@ -40,7 +40,8 @@ interface PlayerState {
 
 async function loadTrackToPlayer(track: Track): Promise<void> {
   try {
-    const url = await getCachedOrRemoteUrl(track.id, track.storage_path)
+    const isProcessed = !!track.processed_storage_path
+    const url = await getCachedOrRemoteUrl(track.id, track.storage_path, track.processed_storage_path)
     await TrackPlayer.reset()
     await TrackPlayer.add({
       id: track.id,
@@ -50,11 +51,13 @@ async function loadTrackToPlayer(track: Track): Promise<void> {
       artwork: track.artwork_url || undefined,
     })
     await TrackPlayer.play()
-    if (track.start_time) {
+    // Processed files play from 0:00 with no adjustments.
+    // Original files still seek to start_time if set.
+    if (!isProcessed && track.start_time) {
       await TrackPlayer.seekTo(track.start_time)
     }
     // Cache in background for offline playback
-    cacheTrack(track.id, track.storage_path).catch(() => {})
+    cacheTrack(track.id, track.storage_path, track.processed_storage_path).catch(() => {})
   } catch (e) {
     console.warn('Failed to load track:', e)
   }
@@ -164,7 +167,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   previous: () => {
     const { progress, currentTrack, playHistory, allTracks } = get()
-    const startTime = currentTrack?.start_time || 0
+    const isProcessed = !!currentTrack?.processed_storage_path
+    const startTime = isProcessed ? 0 : (currentTrack?.start_time || 0)
 
     // If more than 3 seconds in, restart current track
     if (progress - startTime > 3) {
