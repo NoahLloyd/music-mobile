@@ -32,12 +32,15 @@ export async function cacheTrack(trackId: string, storagePath: string): Promise<
   const blob = await response.blob()
   const reader = new FileReader()
 
-  return new Promise<string>((resolve) => {
+  return new Promise<string>((resolve, reject) => {
     reader.onload = () => {
       const base64 = (reader.result as string).split(',')[1]
       cached.create()
       cached.write(base64, { encoding: 'base64' })
       resolve(cached.uri)
+    }
+    reader.onerror = () => {
+      reject(reader.error ?? new Error('FileReader failed'))
     }
     reader.readAsDataURL(blob)
   })
